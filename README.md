@@ -17,69 +17,87 @@ stored.
 5. Map the IP address with its MAC address and return the MAC address to client.
 P
 ## PROGRAM - ARP
-server.py 
+SERVER-ARP
 ```
 import socket
-s=socket.socket()
-s.bind(('localhost',8000))
+s = socket.socket()
+s.bind(('localhost', 8000))
 s.listen(5)
-c,addr=s.accept()
-address={"165.165.80.80":"6A:08:AA:C2","165.165.79.1":"8A:BC:E3:FA"};
+print("ARP Server is listening on port 8000...")
+c, addr = s.accept()
+address = {
+    "148.129.123.45": "5D:BC:E3:FA",
+    "109.178.123.45": "8A:2B:3C:4D",
+}
 while True:
-    ip=c.recv(1024).decode()
-    try:
-        c.send(address[ip].encode())
-    except KeyError:
-        c.send("Not Found".encode())
+    ip = c.recv(1024).decode()
+    print(f"Received IP: {ip}")
+    mac = address.get(ip, "Not Found")
+    c.send(mac.encode())
 ```
-client.py
+CLIENT-ARP
 ```
 import socket
-s=socket.socket()
-s.connect(('localhost',8000))
+s = socket.socket()
+s.connect(('localhost', 8000))
 while True:
-    ip=input("Enter logical Address : ")
+    ip = input("Enter Logical Address (IP): ")
     s.send(ip.encode())
-    print("MAC Address",s.recv(1024).decode())
+    print("MAC Address:", s.recv(1024).decode())
 ```
 
 ## OUPUT - ARP
-
-<img width="890" height="766" alt="image" src="https://github.com/user-attachments/assets/1b55eeb9-fe04-4cc7-b5db-34e451287ed7" />
-
-<img width="692" height="771" alt="image" src="https://github.com/user-attachments/assets/6790ad93-e004-4989-9c12-daab6e48af60" />
-
+SERVER-ARP
+<img width="1440" height="229" alt="image" src="https://github.com/user-attachments/assets/91a12a9a-59c8-489d-b818-525a0b78cb00" />
+CLIENT-ARP
+<img width="1612" height="311" alt="image" src="https://github.com/user-attachments/assets/81687ede-42f2-4bff-affd-bd8439b1ecdc" />
 ## PROGRAM - RARP
-server.py
+SERVER-RARP
 ```
 import socket
-s=socket.socket()
-s.bind(('localhost',9000))
+s = socket.socket()
+s.bind(('localhost', 8000))
 s.listen(5)
-c,addr=s.accept()
-address={"6A:08:AA:C2":"192.168.1.100","8A:BC:E3:FA":"192.168.1.99"};
+print("Server is listening for RARP requests...")
+c, addr = s.accept()
+print(f"Connection established with {addr}")
+rarp_table = {
+    "6A:08:AA:C2": "165.165.80.80",
+    "8A:BC:E3:FA": "165.165.79.1"
+}
 while True:
-    ip=c.recv(1024).decode()
+    mac = c.recv(1024).decode()
+    if not mac:  
+        break
     try:
-        c.send(address[ip].encode())
+        ip = rarp_table[mac]  
+        print(f"MAC: {mac} -> IP: {ip}")
+        c.send(ip.encode())  
     except KeyError:
+        print(f"MAC: {mac} not found in RARP table.")
         c.send("Not Found".encode())
+c.close()
+s.close()
 ```
-client.py
+CLIENT-RARP
 ```
 import socket
-s=socket.socket()
-s.connect(('localhost',9000))
+c = socket.socket()
+c.connect(('localhost', 8000))
 while True:
-    ip=input("Enter MAC Address : ")
-    s.send(ip.encode())
-    print("Logical Address",s.recv(1024).decode())
+    mac = input("Enter MAC address to find IP (or type 'exit' to quit): ")
+    if mac.lower() == "exit":  
+        break
+    c.send(mac.encode())
+    ip = c.recv(1024).decode()
+    print(f"IP Address for {mac}: {ip}")
+c.close()
 ```
 ## OUPUT -RARP
-
-<img width="750" height="668" alt="image" src="https://github.com/user-attachments/assets/536b5e10-a1d6-45cf-ac12-5956094c390c" />
-<img width="701" height="760" alt="image" src="https://github.com/user-attachments/assets/d76ce7c8-25f1-4f77-b8c8-91897c09c0b6" />
-
+SERVER-RARP
+<img width="1470" height="263" alt="image" src="https://github.com/user-attachments/assets/3773a421-5f07-4c5f-85d3-e71677f8ba9c" />
+CLIENT-RARP
+<img width="1599" height="276" alt="image" src="https://github.com/user-attachments/assets/769f889a-d0ec-42e5-a918-0fde78d879db" />
 ## RESULT
 Thus, the python program for simulating ARP protocols using TCP was successfully 
 executed.
